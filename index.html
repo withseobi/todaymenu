@@ -45,7 +45,9 @@
     .result-count { color:var(--muted); font-size:12px; white-space:nowrap; }
     .result-count strong { color:var(--green); font-size:14px; }
     .grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:24px; }
-    .card { overflow:hidden; border:1px solid var(--line); border-radius:14px; background:#fffef9; transition:transform .2s,box-shadow .2s; }
+    .card { position:relative; overflow:hidden; border:1px solid var(--line); border-radius:14px; background:#fffef9; transition:transform .2s,box-shadow .2s; }
+    .card-open { position:absolute; inset:0; width:100%; height:100%; background:transparent; border:0; border-radius:14px; }
+    .card-open:focus-visible { outline-offset:-4px; }
     .card:hover { transform:translateY(-4px); box-shadow:0 10px 24px #283b300c; }
     .photo { position:relative; aspect-ratio:1.65; background:#e8e9dd; overflow:hidden; }
     .photo img { width:100%; height:100%; object-fit:cover; display:block; transition:transform .4s; }
@@ -65,6 +67,30 @@
     .status button { margin-top:18px; border:0; border-radius:8px; padding:10px 18px; background:var(--green); color:white; }
     footer { border-top:1px solid var(--line); padding:25px 0 30px; display:flex; justify-content:space-between; gap:16px; color:var(--muted); font-size:11px; line-height:1.7; }
     footer b { color:var(--green); font-weight:600; }
+    body:has(.recipe-dialog[open]) { overflow:hidden; }
+    .recipe-dialog { width:min(740px,calc(100% - 32px)); max-height:calc(100vh - 32px); max-height:calc(100dvh - 32px); margin:auto; padding:0; border:1px solid var(--line); border-radius:18px; background:#fffef9; color:var(--ink); box-shadow:0 24px 80px #15281d40; overflow-y:auto; overscroll-behavior:contain; }
+    .recipe-dialog::backdrop { background:#1c3027a6; backdrop-filter:blur(4px); }
+    .dialog-bar { position:sticky; top:0; z-index:2; display:flex; align-items:center; justify-content:space-between; padding:10px 18px 10px 24px; background:#fffef9; border-bottom:1px solid var(--line); }
+    .dialog-bar span { font-size:11px; font-weight:700; color:var(--green); letter-spacing:.15em; }
+    .dialog-x { width:40px; height:40px; border:0; border-radius:50%; background:#eef1e6; color:var(--ink); font-size:25px; line-height:1; }
+    .dialog-photo { aspect-ratio:16/9; background:#eeeee3; }
+    .dialog-photo img { display:block; width:100%; height:100%; object-fit:contain; }
+    .dialog-content { padding:28px 30px 30px; }
+    .dialog-content h2 { font-size:28px; line-height:1.45; word-break:keep-all; margin-bottom:20px; }
+    .recipe-meta { display:flex; flex-wrap:wrap; gap:14px 30px; margin:0 0 28px; padding-bottom:23px; border-bottom:1px solid var(--line); font-size:14px; }
+    .recipe-meta div { display:flex; gap:10px; }
+    .recipe-meta dt { color:var(--muted); }
+    .recipe-meta dd { margin:0; font-weight:700; }
+    .detail-section { margin-top:26px; }
+    .detail-section h3 { font-size:17px; margin:0 0 13px; }
+    .detail-text { margin:0; white-space:pre-wrap; overflow-wrap:anywhere; font-size:14px; line-height:1.9; }
+    .recipe-steps { margin:0; padding-left:24px; font-size:14px; line-height:1.9; }
+    .recipe-steps li { padding-left:6px; margin-bottom:12px; white-space:pre-wrap; overflow-wrap:anywhere; }
+    .recipe-steps li::marker { color:var(--green); font-weight:700; }
+    .recipe-tip { margin-top:26px; padding:18px 20px; border-radius:12px; background:#eef2e5; }
+    .recipe-tip h3 { margin:0 0 8px; font-size:15px; }
+    .dialog-close { width:100%; margin-top:28px; padding:13px 20px; border:0; border-radius:10px; background:var(--green); color:white; font-weight:700; }
+    @media (max-width:560px) { .dialog-content { padding:22px 20px; } .dialog-content h2 { font-size:23px; } .dialog-photo { aspect-ratio:4/3; } }
     @media (min-width:1400px) { .hero { min-height:345px; } }
     @media (max-width:800px) { .wrap { width:calc(100% - 40px); } .hero { grid-template-columns:1fr 230px; } .hero-art { height:210px; } .grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; } .intro { font-size:13px; } .selection { padding:23px; } }
     @media (max-width:560px) { .wrap { width:calc(100% - 36px); } header { height:74px; } .brand { font-size:18px; gap:7px; } .header-note { font-size:11px; } .hero { grid-template-columns:1fr; min-height:auto; padding:34px 0 29px; } .hero-art { display:none; } .eyebrow { margin-bottom:13px; font-size:10px; } h1 { font-size:33px; } .intro { line-height:1.8; } .selection { padding:20px 18px; } .selection-top { align-items:flex-start; gap:12px; } .selection-top h2 { font-size:16px; } .month-control { gap:0; } .month-control label { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); } select { min-width:80px; padding:7px 8px; font-size:13px; } .section-heading { gap:8px; } .ingredient { padding:8px 13px; font-size:13px; min-height:40px; } .ingredients { gap:8px; } .selection-note { font-size:11px; } .results { padding:30px 0 38px; } h2 { font-size:17px; } .grid { grid-template-columns:1fr; gap:20px; } .photo { aspect-ratio:1.65; } .card-body { padding:18px 20px; } footer { flex-direction:column; gap:7px; } }
@@ -134,6 +160,22 @@
     <footer><b>오늘 뭐먹지? · 계절을 담은 식탁</b><span>매일의 식사가 조금 더 즐거워지도록. 잘 먹겠습니다!</span></footer>
   </div>
 
+  <dialog id="recipe-dialog" class="recipe-dialog" aria-labelledby="detail-name">
+    <div class="dialog-bar"><span>RECIPE NOTE</span><button type="button" class="dialog-x" id="dialog-x" aria-label="레시피 팝업 닫기" autofocus>×</button></div>
+    <div id="detail-photo" class="dialog-photo"></div>
+    <div class="dialog-content">
+      <h2 id="detail-name"></h2>
+      <dl class="recipe-meta">
+        <div><dt>요리종류</dt><dd id="detail-category"></dd></div>
+        <div><dt>조리방법</dt><dd id="detail-method"></dd></div>
+      </dl>
+      <section class="detail-section" aria-labelledby="detail-ingredients-title"><h3 id="detail-ingredients-title">재료</h3><p id="detail-ingredients" class="detail-text"></p></section>
+      <section class="detail-section" aria-labelledby="detail-steps-title"><h3 id="detail-steps-title">조리순서</h3><ol id="detail-steps" class="recipe-steps"></ol></section>
+      <aside id="detail-tip" class="recipe-tip" hidden><h3>💡 요리 팁</h3><p id="detail-tip-text" class="detail-text"></p></aside>
+      <button type="button" id="dialog-close" class="dialog-close">닫기</button>
+    </div>
+  </dialog>
+
   <script>
     'use strict';
     const monthSelect = document.querySelector('#month');
@@ -143,6 +185,7 @@
     const recipeTitle = document.querySelector('#recipes-title');
     const selection = document.querySelector('.selection');
     const selectionNote = document.querySelector('#selection-note');
+    const recipeDialog = document.querySelector('#recipe-dialog');
     let data = { seasonal: [], recipes: [] };
     let selectedIngredient = '';
 
@@ -154,6 +197,49 @@
     function matchingRecipes(ingredient, month = Number(monthSelect.value)) {
       return data.recipes.filter(recipe => recipe.seasonal.includes(ingredient) && recipe.months.includes(month));
     }
+
+    function recipeText(value) {
+      return String(value ?? '').replace(/<br\s*\/?>/gi, '\n').trim();
+    }
+
+    function createRecipeImage(recipe, lazy = false) {
+      const image = document.createElement('img');
+      image.alt = recipe.name;
+      image.loading = lazy ? 'lazy' : 'eager';
+      image.decoding = 'async';
+      const fallback = document.createElement('div');
+      fallback.className = 'photo-fallback';
+      const symbol = document.createElement('span');
+      symbol.textContent = '🍽️';
+      symbol.setAttribute('aria-hidden', 'true');
+      fallback.append(symbol, '사진을 준비 중이에요');
+      if (!recipe.image) return fallback;
+      image.addEventListener('error', () => image.replaceWith(fallback), { once: true });
+      image.src = recipe.image;
+      return image;
+    }
+
+    function openRecipe(recipe) {
+      document.querySelector('#detail-name').textContent = recipe.name;
+      document.querySelector('#detail-photo').replaceChildren(createRecipeImage(recipe));
+      document.querySelector('#detail-category').textContent = recipe.category || '정보 없음';
+      document.querySelector('#detail-method').textContent = recipe.method || '정보 없음';
+      document.querySelector('#detail-ingredients').textContent = recipeText(recipe.ingredients_text) || '등록된 재료 정보가 없습니다.';
+      const steps = (Array.isArray(recipe.steps) ? recipe.steps : []).map(step => {
+        const item = document.createElement('li');
+        item.textContent = recipeText(step);
+        return item;
+      });
+      document.querySelector('#detail-steps').replaceChildren(...steps);
+      const tip = recipeText(recipe.tip);
+      document.querySelector('#detail-tip').hidden = !tip;
+      document.querySelector('#detail-tip-text').textContent = tip;
+      recipeDialog.showModal();
+      recipeDialog.scrollTop = 0;
+    }
+
+    document.querySelector('#dialog-x').addEventListener('click', () => recipeDialog.close());
+    document.querySelector('#dialog-close').addEventListener('click', () => recipeDialog.close());
 
     function showStatus(title, description, retry = false) {
       const box = document.createElement('div');
@@ -194,23 +280,7 @@
         card.className = 'card';
         const photo = document.createElement('div');
         photo.className = 'photo';
-        const image = document.createElement('img');
-        image.alt = recipe.name;
-        image.loading = 'lazy';
-        image.decoding = 'async';
-        function imageFallback() {
-          const fallback = document.createElement('div');
-          fallback.className = 'photo-fallback';
-          const symbol = document.createElement('span');
-          symbol.textContent = '🍽️';
-          symbol.setAttribute('aria-hidden', 'true');
-          fallback.append(symbol, '사진을 준비 중이에요');
-          image.replaceWith(fallback);
-        }
-        image.addEventListener('error', imageFallback, { once: true });
-        photo.append(image);
-        if (recipe.image) image.src = recipe.image;
-        else imageFallback();
+        photo.append(createRecipeImage(recipe, true));
         const tag = document.createElement('span');
         tag.className = 'season-tag';
         tag.textContent = `${monthSelect.value}월 제철`;
@@ -231,7 +301,14 @@
         method.textContent = recipe.method || '';
         bottom.append(ingredient, method);
         body.append(category, name, bottom);
-        card.append(photo, body);
+        const openButton = document.createElement('button');
+        openButton.type = 'button';
+        openButton.className = 'card-open';
+        openButton.setAttribute('aria-label', `${recipe.name} 레시피 보기`);
+        openButton.setAttribute('aria-haspopup', 'dialog');
+        openButton.setAttribute('aria-controls', 'recipe-dialog');
+        openButton.addEventListener('click', () => openRecipe(recipe));
+        card.append(photo, body, openButton);
         return card;
       });
       recipeGrid.replaceChildren(...cards);
