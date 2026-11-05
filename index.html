@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f7f7f0">
+  <meta name="description" content="지금 가장 맛있는 제철 재료로 오늘의 메뉴를 찾아보세요. 월별 제철 재료와 함께하는 식단 추천.">
+  <title>오늘 뭐먹지? · 제철 한 끼</title>
+  <style>
+    :root { --paper:#f7f7f0; --ink:#283b30; --muted:#727b6e; --line:#e1e4d8; --green:#486747; --orange:#d96b3d; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--paper); color:var(--ink); font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",sans-serif; letter-spacing:-.035em; }
+    button,select { font:inherit; }
+    button,select { -webkit-tap-highlight-color:transparent; }
+    button { cursor:pointer; }
+    button:focus-visible,select:focus-visible,a:focus-visible { outline:3px solid var(--orange); outline-offset:5px; }
+    .wrap { width:min(1120px,calc(100% - 64px)); margin:auto; }
+    header { height:90px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--line); }
+    .brand { display:flex; align-items:center; gap:10px; color:var(--ink); text-decoration:none; font-size:21px; font-weight:800; }
+    .brand svg { width:30px; height:30px; }
+    .header-note { color:var(--muted); font-size:13px; letter-spacing:0; }
+    .header-note span { display:inline-block; width:6px; height:6px; border-radius:50%; background:#829c69; margin-right:8px; vertical-align:2px; }
+    .hero { position:relative; display:grid; grid-template-columns:1fr 370px; align-items:center; min-height:318px; padding:44px 0 38px; }
+    .eyebrow { color:var(--green); font-size:11px; font-weight:700; letter-spacing:.2em; margin:0 0 18px; }
+    h1 { font-size:clamp(32px,4vw,47px); line-height:1.35; font-weight:800; letter-spacing:-.06em; margin:0 0 15px; }
+    h1 em { color:var(--orange); font-style:normal; }
+    .intro { color:var(--muted); font-size:15px; line-height:1.85; margin:0; }
+    .hero-art { width:100%; height:245px; }
+    .selection { padding:26px 30px 30px; background:#fffef9; border:1px solid var(--line); border-radius:18px; }
+    .selection-top { display:flex; align-items:center; justify-content:space-between; gap:20px; margin-bottom:23px; }
+    .section-heading { display:flex; align-items:center; gap:10px; }
+    .step { width:23px; height:23px; border-radius:50%; background:#e9eee1; color:var(--green); display:grid; place-items:center; font-size:11px; font-weight:700; letter-spacing:0; flex-shrink:0; }
+    h2 { font-size:19px; margin:0; font-weight:750; }
+    .month-control { display:flex; align-items:center; gap:12px; }
+    .month-control label { font-size:12px; color:var(--muted); }
+    select { min-width:106px; padding:10px 13px; border:1px solid #cbd2c2; border-radius:9px; background:#fffef9; color:var(--ink); font-size:14px; font-weight:700; cursor:pointer; }
+    .ingredients { display:flex; flex-wrap:wrap; gap:10px; }
+    .ingredient { display:inline-flex; align-items:center; gap:9px; min-height:43px; padding:9px 17px; border-radius:9px; border:1px solid var(--line); color:#596252; background:transparent; font-size:14px; transition:background .15s,border-color .15s,transform .15s; }
+    .ingredient:hover { background:#f0f3e8; border-color:#b1bda5; transform:translateY(-1px); }
+    .ingredient[aria-pressed="true"] { background:var(--green); color:white; border-color:var(--green); }
+    .ingredient .count { font-size:11px; opacity:.65; letter-spacing:0; }
+    .selection-note { margin:17px 0 0; font-size:12px; color:var(--muted); line-height:1.7; }
+    .results { padding:40px 0 60px; }
+    .results-top { display:flex; align-items:center; justify-content:space-between; gap:15px; margin-bottom:23px; }
+    .result-count { color:var(--muted); font-size:12px; white-space:nowrap; }
+    .result-count strong { color:var(--green); font-size:14px; }
+    .grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:24px; }
+    .card { overflow:hidden; border:1px solid var(--line); border-radius:14px; background:#fffef9; transition:transform .2s,box-shadow .2s; }
+    .card:hover { transform:translateY(-4px); box-shadow:0 10px 24px #283b300c; }
+    .photo { position:relative; aspect-ratio:1.65; background:#e8e9dd; overflow:hidden; }
+    .photo img { width:100%; height:100%; object-fit:cover; display:block; transition:transform .4s; }
+    .card:hover img { transform:scale(1.035); }
+    .photo-fallback { display:flex; flex-direction:column; gap:8px; align-items:center; justify-content:center; height:100%; color:var(--muted); font-size:12px; }
+    .photo-fallback span { font-size:30px; }
+    .season-tag { position:absolute; top:14px; left:14px; padding:5px 9px; border-radius:5px; background:#fffef9ef; color:var(--green); font-size:11px; font-weight:700; }
+    .card-body { padding:21px 21px 19px; }
+    .category { color:var(--orange); font-size:11px; font-weight:700; margin:0 0 9px; }
+    .card h3 { font-size:19px; line-height:1.5; margin:0 0 19px; word-break:keep-all; }
+    .card-bottom { border-top:1px solid #edeee5; padding-top:13px; display:flex; align-items:center; justify-content:space-between; gap:8px; color:var(--muted); font-size:12px; }
+    .recipe-ingredient { display:flex; align-items:center; gap:5px; }
+    .recipe-ingredient::before { content:""; display:block; width:5px; height:5px; background:#91a27d; border-radius:50%; }
+    .status { grid-column:1/-1; padding:58px 20px; border:1px dashed #cdd4c2; border-radius:14px; text-align:center; color:var(--muted); line-height:1.9; background:#fffef980; }
+    .status strong { display:block; font-size:19px; color:var(--ink); margin-bottom:8px; }
+    .status p { margin:0; font-size:14px; }
+    .status button { margin-top:18px; border:0; border-radius:8px; padding:10px 18px; background:var(--green); color:white; }
+    footer { border-top:1px solid var(--line); padding:25px 0 30px; display:flex; justify-content:space-between; gap:16px; color:var(--muted); font-size:11px; line-height:1.7; }
+    footer b { color:var(--green); font-weight:600; }
+    @media (min-width:1400px) { .hero { min-height:345px; } }
+    @media (max-width:800px) { .wrap { width:calc(100% - 40px); } .hero { grid-template-columns:1fr 230px; } .hero-art { height:210px; } .grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; } .intro { font-size:13px; } .selection { padding:23px; } }
+    @media (max-width:560px) { .wrap { width:calc(100% - 36px); } header { height:74px; } .brand { font-size:18px; gap:7px; } .header-note { font-size:11px; } .hero { grid-template-columns:1fr; min-height:auto; padding:34px 0 29px; } .hero-art { display:none; } .eyebrow { margin-bottom:13px; font-size:10px; } h1 { font-size:33px; } .intro { line-height:1.8; } .selection { padding:20px 18px; } .selection-top { align-items:flex-start; gap:12px; } .selection-top h2 { font-size:16px; } .month-control { gap:0; } .month-control label { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); } select { min-width:80px; padding:7px 8px; font-size:13px; } .section-heading { gap:8px; } .ingredient { padding:8px 13px; font-size:13px; min-height:40px; } .ingredients { gap:8px; } .selection-note { font-size:11px; } .results { padding:30px 0 38px; } h2 { font-size:17px; } .grid { grid-template-columns:1fr; gap:20px; } .photo { aspect-ratio:1.65; } .card-body { padding:18px 20px; } footer { flex-direction:column; gap:7px; } }
+    @media (prefers-reduced-motion:reduce) { *,*::before,*::after { transition:none!important; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <a class="brand" href="./" aria-label="오늘 뭐먹지? 홈">
+        <svg aria-hidden="true" viewBox="0 0 32 32" fill="none"><path d="M4 17h24c-1 8-6 12-12 12S5 25 4 17Z" fill="#d96b3d"/><path d="M10 12c-1-4 1-7 6-9 2 5 0 9-6 9Z" fill="#6e8758"/><path d="M17 13c1-5 5-6 10-5-1 5-5 7-10 5Z" fill="#9cae7d"/><path d="M3 17h26" stroke="#283b30" stroke-width="2" stroke-linecap="round"/></svg>
+        오늘 뭐먹지?
+      </a>
+      <div class="header-note"><span></span>계절을 담은 식탁</div>
+    </header>
+
+    <main>
+      <section class="hero" aria-labelledby="hero-title">
+        <div>
+          <p class="eyebrow">A LITTLE SEASON ON YOUR TABLE</p>
+          <h1 id="hero-title">오늘의 고민,<br><em>제철 한 끼</em>로 가볍게.</h1>
+          <p class="intro">지금 가장 맛있는 재료로, 오늘의 메뉴를 골라보세요.<br>계절의 맛을 담은 한 끼를 추천해 드릴게요.</p>
+        </div>
+        <svg class="hero-art" viewBox="0 0 370 260" fill="none" aria-hidden="true">
+          <ellipse cx="189" cy="226" rx="130" ry="13" fill="#e8e9dc"/>
+          <path d="M305 39c8-7 16-7 22-4M317 26l2-10M333 49l11 1" stroke="#b2b99d" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="184" cy="128" r="109" fill="#eceede"/>
+          <circle cx="184" cy="128" r="94" fill="#fffef8" stroke="#d7dbc8" stroke-width="1.5"/>
+          <circle cx="184" cy="128" r="73" fill="#f0eee0" stroke="#e4e3d3"/>
+          <path d="M132 132c-31-13-32-43-19-53 8-7 20 0 21 11 12-12 29-9 30 4 14-2 23 14 14 25-14 16-31 19-46 13Z" fill="#6e8c55"/>
+          <path d="M122 91c11 18 24 28 43 32M137 100l8 11M123 113l16 0" stroke="#b5c49a" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M174 119c-9-18 0-30 13-26 0-17 19-22 28-9 12-7 24 5 18 16 19 2 22 22 5 30-23 12-45 6-64-11Z" fill="#9bad70"/>
+          <path d="m193 96 23 30m-12-21 16-5m-8 15 15-3" stroke="#d0d8b3" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M132 155c0-22 24-37 45-23 12 8 19 32 6 44-15 15-51 0-51-21Z" fill="#e6a152"/>
+          <path d="M143 155c0-12 13-20 24-13 8 5 11 18 4 25" stroke="#f8d59b" stroke-width="4" stroke-linecap="round"/>
+          <circle cx="218" cy="155" r="27" fill="#c96c48"/>
+          <circle cx="218" cy="155" r="20" fill="#f2ae81"/>
+          <path d="m218 138-1 12m16 8-11-3m-14 15 7-10" stroke="#fff0cd" stroke-width="3" stroke-linecap="round"/>
+          <ellipse cx="179" cy="180" rx="9" ry="5" transform="rotate(-30 179 180)" fill="#859755"/>
+          <ellipse cx="194" cy="174" rx="9" ry="5" transform="rotate(25 194 174)" fill="#a6b37a"/>
+          <path d="m66 107-17 101m-8-106-3 21c-1 9 20 13 23 3l6-20M51 105l-5 25" stroke="#9a9f85" stroke-width="5" stroke-linecap="round"/>
+          <path d="m307 99-18 107" stroke="#9a9f85" stroke-width="5" stroke-linecap="round"/>
+          <ellipse cx="309" cy="91" rx="10" ry="20" transform="rotate(9 309 91)" fill="#adb29a"/>
+          <path d="M76 45c-14-1-22-9-21-20 13-1 24 7 21 20Z" fill="#a1b180"/>
+          <path d="m60 31 18 18" stroke="#71865c" stroke-width="1.5" stroke-linecap="round"/>
+          <circle cx="276" cy="222" r="3" fill="#d9a477"/><circle cx="89" cy="204" r="2" fill="#d9a477"/>
+        </svg>
+      </section>
+
+      <section class="selection" aria-labelledby="ingredients-title" aria-busy="true">
+        <div class="selection-top">
+          <div class="section-heading"><span class="step" aria-hidden="true">01</span><h2 id="ingredients-title">이달의 제철 재료</h2></div>
+          <div class="month-control"><label for="month">계절 고르기</label><select id="month" aria-label="월 선택" disabled></select></div>
+        </div>
+        <div id="ingredients" class="ingredients" role="group" aria-label="제철 재료 선택"></div>
+        <p class="selection-note" id="selection-note">마음에 드는 재료를 고르면, 어울리는 메뉴를 보여드려요.</p>
+      </section>
+
+      <section class="results" aria-labelledby="recipes-title">
+        <div class="results-top">
+          <div class="section-heading"><span class="step" aria-hidden="true">02</span><h2 id="recipes-title">오늘의 추천 메뉴</h2></div>
+          <span class="result-count" id="result-count" role="status"></span>
+        </div>
+        <div class="grid" id="recipes" aria-busy="true"><div class="status" role="status"><strong>계절의 맛을 찾고 있어요</strong><p>제철 재료와 메뉴를 불러오는 중입니다.</p></div></div>
+      </section>
+    </main>
+    <footer><b>오늘 뭐먹지? · 계절을 담은 식탁</b><span>매일의 식사가 조금 더 즐거워지도록. 잘 먹겠습니다!</span></footer>
+  </div>
+
+  <script>
+    'use strict';
+    const monthSelect = document.querySelector('#month');
+    const ingredientList = document.querySelector('#ingredients');
+    const recipeGrid = document.querySelector('#recipes');
+    const resultCount = document.querySelector('#result-count');
+    const recipeTitle = document.querySelector('#recipes-title');
+    const selection = document.querySelector('.selection');
+    const selectionNote = document.querySelector('#selection-note');
+    let data = { seasonal: [], recipes: [] };
+    let selectedIngredient = '';
+
+    for (let month = 1; month <= 12; month++) {
+      monthSelect.add(new Option(`${month}월`, month));
+    }
+    monthSelect.value = String(new Date().getMonth() + 1);
+
+    function matchingRecipes(ingredient, month = Number(monthSelect.value)) {
+      return data.recipes.filter(recipe => recipe.seasonal.includes(ingredient) && recipe.months.includes(month));
+    }
+
+    function showStatus(title, description, retry = false) {
+      const box = document.createElement('div');
+      box.className = 'status';
+      box.setAttribute('role', 'status');
+      const heading = document.createElement('strong');
+      heading.textContent = title;
+      const text = document.createElement('p');
+      text.textContent = description;
+      box.append(heading, text);
+      if (retry) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = '다시 불러오기';
+        button.addEventListener('click', loadMenu);
+        box.append(button);
+      }
+      recipeGrid.replaceChildren(box);
+    }
+
+    function renderRecipes() {
+      const recipes = selectedIngredient ? matchingRecipes(selectedIngredient) : [];
+      recipeTitle.textContent = selectedIngredient ? `${selectedIngredient}로 차리는 한 끼` : '오늘의 추천 메뉴';
+      const count = document.createElement('strong');
+      count.textContent = recipes.length;
+      resultCount.replaceChildren(count, '개의 메뉴');
+      ingredientList.querySelectorAll('button').forEach(button => {
+        button.setAttribute('aria-pressed', String(button.dataset.ingredient === selectedIngredient));
+      });
+      if (!recipes.length) {
+        showStatus('아직 추천 메뉴가 없어요', selectedIngredient
+          ? `${monthSelect.value}월의 ${selectedIngredient} 추천 레시피가 없습니다. 다른 재료나 월을 선택해 보세요.`
+          : '이달에 등록된 제철 재료가 없습니다. 다른 월을 선택해 보세요.');
+        return;
+      }
+      const cards = recipes.map(recipe => {
+        const card = document.createElement('article');
+        card.className = 'card';
+        const photo = document.createElement('div');
+        photo.className = 'photo';
+        const image = document.createElement('img');
+        image.alt = recipe.name;
+        image.loading = 'lazy';
+        image.decoding = 'async';
+        function imageFallback() {
+          const fallback = document.createElement('div');
+          fallback.className = 'photo-fallback';
+          const symbol = document.createElement('span');
+          symbol.textContent = '🍽️';
+          symbol.setAttribute('aria-hidden', 'true');
+          fallback.append(symbol, '사진을 준비 중이에요');
+          image.replaceWith(fallback);
+        }
+        image.addEventListener('error', imageFallback, { once: true });
+        photo.append(image);
+        if (recipe.image) image.src = recipe.image;
+        else imageFallback();
+        const tag = document.createElement('span');
+        tag.className = 'season-tag';
+        tag.textContent = `${monthSelect.value}월 제철`;
+        photo.append(tag);
+        const body = document.createElement('div');
+        body.className = 'card-body';
+        const category = document.createElement('p');
+        category.className = 'category';
+        category.textContent = recipe.category;
+        const name = document.createElement('h3');
+        name.textContent = recipe.name;
+        const bottom = document.createElement('div');
+        bottom.className = 'card-bottom';
+        const ingredient = document.createElement('span');
+        ingredient.className = 'recipe-ingredient';
+        ingredient.textContent = selectedIngredient;
+        const method = document.createElement('span');
+        method.textContent = recipe.method || '';
+        bottom.append(ingredient, method);
+        body.append(category, name, bottom);
+        card.append(photo, body);
+        return card;
+      });
+      recipeGrid.replaceChildren(...cards);
+    }
+
+    function renderMonth() {
+      const month = Number(monthSelect.value);
+      const ingredients = [...new Set(data.seasonal.filter(item => item.month === month).map(item => item.name))];
+      // Start with a plentiful ingredient so there are menus to explore immediately.
+      selectedIngredient = ingredients.reduce((best, name) =>
+        matchingRecipes(name, month).length > matchingRecipes(best, month).length ? name : best, ingredients[0] || '');
+      const buttons = ingredients.map(name => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'ingredient';
+        button.dataset.ingredient = name;
+        const count = document.createElement('span');
+        count.className = 'count';
+        const total = matchingRecipes(name, month).length;
+        count.textContent = total;
+        count.setAttribute('aria-hidden', 'true');
+        button.setAttribute('aria-label', `${name}, 추천 메뉴 ${total}개`);
+        button.append(name, count);
+        button.addEventListener('click', () => { selectedIngredient = name; renderRecipes(); });
+        return button;
+      });
+      ingredientList.replaceChildren(...buttons);
+      document.querySelector('#ingredients-title').textContent = `${month}월의 제철 재료`;
+      renderRecipes();
+    }
+
+    async function loadMenu() {
+      monthSelect.disabled = true;
+      selection.setAttribute('aria-busy', 'true');
+      recipeGrid.setAttribute('aria-busy', 'true');
+      showStatus('계절의 맛을 찾고 있어요', '제철 재료와 메뉴를 불러오는 중입니다.');
+      try {
+        const response = await fetch('./menu.json');
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const menu = await response.json();
+        if (!Array.isArray(menu.seasonal) || !Array.isArray(menu.recipes) ||
+          !menu.recipes.every(recipe => Array.isArray(recipe.seasonal) && Array.isArray(recipe.months))) {
+          throw new Error('잘못된 메뉴 데이터 형식');
+        }
+        data = menu;
+        renderMonth();
+        monthSelect.disabled = false;
+        selectionNote.textContent = '마음에 드는 재료를 고르면, 어울리는 메뉴를 보여드려요.';
+      } catch (error) {
+        console.error('메뉴 불러오기 실패:', error);
+        selectionNote.textContent = '제철 재료를 불러오지 못했습니다.';
+        showStatus('메뉴를 불러오지 못했어요', location.protocol === 'file:'
+          ? '로컬 웹 서버로 이 페이지를 열어주세요. 메뉴 데이터를 불러오려면 HTTP 접속이 필요해요.'
+          : '연결 상태와 같은 폴더의 menu.json 파일을 확인한 뒤 다시 시도해 주세요.', true);
+      } finally {
+        selection.setAttribute('aria-busy', 'false');
+        recipeGrid.setAttribute('aria-busy', 'false');
+      }
+    }
+
+    monthSelect.addEventListener('change', renderMonth);
+    loadMenu();
+  </script>
+</body>
+</html>
