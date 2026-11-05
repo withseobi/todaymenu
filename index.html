@@ -6,6 +6,7 @@
   <meta name="theme-color" content="#fffaf6">
   <meta name="description" content="지금 가장 맛있는 제철 재료로 오늘의 메뉴를 찾아보세요. 월별 제철 재료와 함께하는 식단 추천.">
   <title>오늘 뭐먹지? · 제철 한 끼</title>
+  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/dist/umd/supabase.js" integrity="sha384-uteMfOloLDGt042uDz+xHGF3ym63/WQ6rFq7murQRG8Ih7QrXGEGNtWd8688sb4O" crossorigin="anonymous"></script>
   <style>
     :root { --paper:#fffaf6; --ink:#39261e; --muted:#826b5f; --line:#f0dfd3; --accent:#cd4023; --orange:#ee5b2b; --soft:#fff0e3; }
     * { box-sizing:border-box; }
@@ -21,6 +22,12 @@
     .brand svg { width:31px; height:31px; }
     .header-note { color:var(--muted); font-size:12px; white-space:nowrap; }
     .header-note span { display:none; }
+    .auth-panel { margin-left:auto; min-width:0; max-width:45%; }
+    .auth-button { min-height:44px; padding:10px 17px; border:1px solid #edc7b0; border-radius:12px; background:#fff0e3; color:var(--accent); font-size:14px; font-weight:750; }
+    .auth-session { display:flex; flex-direction:column; align-items:flex-end; gap:4px; padding:10px 0; }
+    .user-email { max-width:100%; color:var(--ink); font-size:12px; line-height:1.5; overflow-wrap:anywhere; text-align:right; }
+    .logout-button { min-height:44px; padding:8px 12px; background:#fff; font-size:12px; }
+    button:disabled { cursor:wait; opacity:.6; }
     .hero { isolation:isolate; position:relative; display:flex; align-items:center; min-height:242px; padding:27px 22px; margin:0 0 22px; border:1px solid #ffddbf; border-radius:24px; background:linear-gradient(115deg,#fff2de 0%,#ffe2bb 100%); overflow:hidden; }
     .hero-copy { position:relative; z-index:1; max-width:72%; }
     .eyebrow { width:fit-content; margin:0 0 12px; padding:6px 9px; background:#fffaf1; color:#b74921; font-size:11px; font-weight:750; letter-spacing:0; border-radius:6px; }
@@ -75,7 +82,7 @@
     .status button { min-height:46px; margin-top:18px; border:0; border-radius:12px; padding:11px 20px; background:var(--accent); color:#fff; }
     footer { border-top:1px solid var(--line); padding:25px 0 max(28px,env(safe-area-inset-bottom)); display:flex; flex-direction:column; gap:7px; color:var(--muted); font-size:12px; line-height:1.7; }
     footer b { color:var(--accent); font-weight:700; }
-    body:has(.recipe-dialog[open]) { overflow:hidden; }
+    body:has(dialog[open]) { overflow:hidden; }
     .recipe-dialog { width:100%; max-width:740px; max-height:93vh; max-height:93dvh; margin:auto auto 0; padding:0; border:0; border-radius:24px 24px 0 0; background:#fffaf6; color:var(--ink); box-shadow:0 24px 80px #47200f40; overflow-y:auto; overscroll-behavior:contain; }
     .recipe-dialog::backdrop { background:#3f2416a8; backdrop-filter:blur(4px); }
     .dialog-bar { position:sticky; top:0; z-index:2; display:flex; align-items:center; justify-content:space-between; padding:12px 18px 12px 22px; background:#fffaf6f5; border-bottom:1px solid var(--line); }
@@ -98,6 +105,23 @@
     .recipe-tip { margin-top:26px; padding:18px; border:1px solid #f7d9ab; border-radius:14px; background:#fff0d6; }
     .recipe-tip h3 { margin:0 0 9px; font-size:16px; }
     .dialog-close { width:100%; min-height:52px; margin-top:28px; padding:14px 20px; border:0; border-radius:14px; background:var(--accent); color:#fff; font-size:16px; font-weight:750; }
+    .recipe-dialog.auth-dialog { width:calc(100% - 32px); max-width:430px; margin:auto; max-height:calc(100vh - 32px); max-height:calc(100dvh - 32px); border-radius:24px; }
+    .auth-content { padding:24px; }
+    .auth-content h2 { font-size:27px; margin-bottom:9px; }
+    .auth-description { color:var(--muted); font-size:14px; line-height:1.8; margin:0 0 22px; }
+    .auth-modes { display:grid; grid-template-columns:1fr 1fr; gap:5px; background:#ffeadb; border-radius:13px; padding:5px; margin-bottom:24px; }
+    .auth-modes button { min-height:44px; border:0; border-radius:9px; background:transparent; color:#81523b; font-size:15px; font-weight:700; }
+    .auth-modes button[aria-pressed="true"] { color:var(--accent); background:#fff; box-shadow:0 2px 7px #8b401514; }
+    .auth-form { display:grid; gap:17px; }
+    .auth-field { display:grid; gap:8px; }
+    .auth-field label { font-size:14px; font-weight:750; }
+    .auth-field input { width:100%; min-width:0; min-height:50px; border:1px solid #e7cdbc; border-radius:12px; padding:12px 14px; font:inherit; font-size:16px; color:var(--ink); background:#fff; }
+    .auth-field input:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+    .auth-hint { margin:0; font-size:12px; color:var(--muted); line-height:1.7; }
+    .auth-message { margin:0; border-radius:11px; padding:12px 14px; font-size:13px; line-height:1.8; overflow-wrap:anywhere; background:#fff0d6; color:#805220; }
+    .auth-message[data-kind="error"] { background:#ffebe5; color:#a12e1b; }
+    .auth-submit { margin-top:2px; }
+    .auth-notice { position:fixed; z-index:4; bottom:max(20px,env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%); width:calc(100% - 36px); max-width:430px; margin:0; padding:15px 18px; border:1px solid #eccab3; border-radius:14px; box-shadow:0 8px 30px #5b281b20; background:#fff5e9; color:var(--ink); font-size:14px; line-height:1.8; }
     @media (max-width:379px) {
       header { min-height:68px; }
       .brand { font-size:18px; gap:6px; }
@@ -169,7 +193,13 @@
         <svg aria-hidden="true" viewBox="0 0 32 32" fill="none"><path d="M4 17h24c-1 8-6 12-12 12S5 25 4 17Z" fill="#d96b3d"/><path d="M10 12c-1-4 1-7 6-9 2 5 0 9-6 9Z" fill="#6e8758"/><path d="M17 13c1-5 5-6 10-5-1 5-5 7-10 5Z" fill="#9cae7d"/><path d="M3 17h26" stroke="#283b30" stroke-width="2" stroke-linecap="round"/></svg>
         오늘 뭐먹지?
       </a>
-      <div class="header-note">매일 맛있는 발견</div>
+      <div class="auth-panel">
+        <button type="button" id="login-button" class="auth-button" aria-haspopup="dialog" aria-controls="auth-dialog">로그인</button>
+        <div id="auth-session" class="auth-session" hidden>
+          <span id="user-email" class="user-email"></span>
+          <button type="button" id="logout-button" class="auth-button logout-button">로그아웃</button>
+        </div>
+      </div>
     </header>
 
     <main>
@@ -228,6 +258,25 @@
       <button type="button" id="dialog-close" class="dialog-close">닫기</button>
     </div>
   </dialog>
+
+  <dialog id="auth-dialog" class="recipe-dialog auth-dialog" aria-labelledby="auth-title" aria-describedby="auth-description">
+    <div class="dialog-bar"><span>오늘 뭐먹지?</span><button type="button" id="auth-close" class="dialog-x" aria-label="로그인 팝업 닫기">×</button></div>
+    <div class="auth-content">
+      <h2 id="auth-title">로그인</h2>
+      <p id="auth-description" class="auth-description">이메일로 간편하게 시작해 보세요.</p>
+      <div class="auth-modes" role="group" aria-label="로그인 또는 회원가입 선택">
+        <button type="button" id="auth-login-mode" aria-pressed="true">로그인</button>
+        <button type="button" id="auth-signup-mode" aria-pressed="false">회원가입</button>
+      </div>
+      <form id="auth-form" class="auth-form">
+        <div class="auth-field"><label for="auth-email">이메일</label><input type="email" id="auth-email" name="email" placeholder="you@example.com" autocomplete="email" inputmode="email" autocapitalize="none" spellcheck="false" maxlength="254" required></div>
+        <div class="auth-field"><label for="auth-password">비밀번호</label><input type="password" id="auth-password" name="password" placeholder="비밀번호를 입력해 주세요" autocomplete="current-password" minlength="1" maxlength="128" aria-describedby="auth-password-hint" required><p id="auth-password-hint" class="auth-hint" hidden>6자 이상의 비밀번호를 입력해 주세요.</p></div>
+        <p id="auth-message" class="auth-message" role="status" aria-live="polite" hidden></p>
+        <button type="submit" id="auth-submit" class="dialog-close auth-submit" disabled>로그인</button>
+      </form>
+    </div>
+  </dialog>
+  <p id="auth-notice" class="auth-notice" role="status" aria-live="polite" hidden></p>
 
   <script>
     'use strict';
@@ -460,6 +509,194 @@
 
     monthSelect.addEventListener('change', renderMonth);
     loadMenu();
+  </script>
+  <script>
+    (() => {
+      'use strict';
+      // This publishable key is intended for browser use; never use a secret/service-role key here.
+      const SUPABASE_URL = 'https://oybsciakytecnwwvosgd.supabase.co';
+      const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_0vIXJOhbfd6YxkgielTF6Q_Tn4KMQK3';
+      const authDialog = document.querySelector('#auth-dialog');
+      const authForm = document.querySelector('#auth-form');
+      const emailInput = document.querySelector('#auth-email');
+      const passwordInput = document.querySelector('#auth-password');
+      const loginButton = document.querySelector('#login-button');
+      const logoutButton = document.querySelector('#logout-button');
+      const loginModeButton = document.querySelector('#auth-login-mode');
+      const signupModeButton = document.querySelector('#auth-signup-mode');
+      const submitButton = document.querySelector('#auth-submit');
+      const message = document.querySelector('#auth-message');
+      const notice = document.querySelector('#auth-notice');
+      let client = null;
+      let mode = 'login';
+      let busy = false;
+      let noticeTimer;
+
+      function showMessage(text = '', kind = 'info') {
+        message.textContent = text;
+        message.dataset.kind = kind;
+        message.hidden = !text;
+      }
+
+      function showNotice(text) {
+        clearTimeout(noticeTimer);
+        notice.textContent = text;
+        notice.hidden = false;
+        noticeTimer = setTimeout(() => { notice.hidden = true; }, 7000);
+      }
+
+      function renderUser(user) {
+        const email = user?.email || '';
+        document.querySelector('#user-email').textContent = email;
+        document.querySelector('#auth-session').hidden = !email;
+        loginButton.hidden = !!email;
+      }
+
+      function updateForm() {
+        const signup = mode === 'signup';
+        submitButton.disabled = busy || !client;
+        submitButton.textContent = busy ? '처리 중…' : signup ? '회원가입' : '로그인';
+        loginModeButton.disabled = busy;
+        signupModeButton.disabled = busy;
+        emailInput.disabled = busy;
+        passwordInput.disabled = busy;
+        authForm.setAttribute('aria-busy', String(busy));
+      }
+
+      function setMode(nextMode) {
+        if (busy) return;
+        mode = nextMode;
+        const signup = mode === 'signup';
+        document.querySelector('#auth-title').textContent = signup ? '회원가입' : '로그인';
+        document.querySelector('#auth-description').textContent = signup
+          ? '이메일로 가입하고, 인증 메일을 확인해 주세요.'
+          : '이메일로 간편하게 시작해 보세요.';
+        loginModeButton.setAttribute('aria-pressed', String(!signup));
+        signupModeButton.setAttribute('aria-pressed', String(signup));
+        passwordInput.autocomplete = signup ? 'new-password' : 'current-password';
+        passwordInput.minLength = signup ? 6 : 1;
+        passwordInput.value = '';
+        document.querySelector('#auth-password-hint').hidden = !signup;
+        showMessage();
+        updateForm();
+      }
+
+      function friendlyError(error) {
+        const messages = {
+          invalid_credentials: '이메일 또는 비밀번호를 확인해 주세요.',
+          email_not_confirmed: '인증 메일의 링크를 누른 뒤 로그인해 주세요.',
+          user_already_exists: '이미 가입된 이메일입니다. 로그인해 주세요.',
+          email_exists: '이미 가입된 이메일입니다. 로그인해 주세요.',
+          signup_disabled: '현재 회원가입을 잠시 쉬고 있어요. 나중에 다시 시도해 주세요.',
+          email_address_invalid: '올바른 이메일 주소를 입력해 주세요.',
+          email_address_not_authorized: '현재 이 이메일로는 가입할 수 없습니다. 관리자에게 문의해 주세요.',
+          weak_password: '더 안전한 비밀번호를 사용해 주세요. 6자 이상으로 입력해 주세요.',
+          over_email_send_rate_limit: '인증 메일 요청이 많습니다. 잠시 후 다시 시도해 주세요.',
+          over_request_rate_limit: '요청이 많습니다. 잠시 후 다시 시도해 주세요.',
+          request_timeout: '연결 시간이 초과되었습니다. 다시 시도해 주세요.'
+        };
+        return messages[error?.code] || '요청을 처리하지 못했습니다. 연결 상태를 확인하고 다시 시도해 주세요.';
+      }
+
+      loginButton.addEventListener('click', () => {
+        setMode('login');
+        if (!client) showMessage('로그인 기능을 준비 중입니다. 잠시 후에도 연결되지 않으면 새로고침해 주세요.');
+        authDialog.showModal();
+        emailInput.focus();
+      });
+      document.querySelector('#auth-close').addEventListener('click', () => authDialog.close());
+      authDialog.addEventListener('close', () => { passwordInput.value = ''; });
+      loginModeButton.addEventListener('click', () => setMode('login'));
+      signupModeButton.addEventListener('click', () => setMode('signup'));
+
+      authForm.addEventListener('submit', async event => {
+        event.preventDefault();
+        if (busy || !client || !authForm.reportValidity()) return;
+        const email = emailInput.value.trim();
+        const password = passwordInput.value;
+        const signup = mode === 'signup';
+        busy = true;
+        showMessage();
+        updateForm();
+        try {
+          const result = signup
+            ? await client.auth.signUp({
+                email, password,
+                options: { emailRedirectTo: new URL('./', location.href).href }
+              })
+            : await client.auth.signInWithPassword({ email, password });
+          if (result.error) throw result.error;
+          passwordInput.value = '';
+          if (result.data.session) {
+            renderUser(result.data.session.user);
+            authDialog.close();
+            logoutButton.focus();
+            showNotice(signup ? '회원가입이 완료되었습니다. 반가워요!' : '로그인되었습니다. 맛있는 한 끼를 골라보세요!');
+          } else if (signup) {
+            busy = false;
+            setMode('login');
+            showMessage('가입 요청을 받았습니다. 받은 메일함에서 인증 링크를 확인한 뒤 로그인해 주세요. 메일이 없다면 스팸함도 확인해 주세요.');
+          } else {
+            showMessage('로그인을 완료하지 못했습니다. 다시 시도해 주세요.', 'error');
+          }
+        } catch (error) {
+          showMessage(friendlyError(error), 'error');
+        } finally {
+          busy = false;
+          updateForm();
+        }
+      });
+
+      logoutButton.addEventListener('click', async () => {
+        if (!client || logoutButton.disabled) return;
+        logoutButton.disabled = true;
+        logoutButton.textContent = '로그아웃 중…';
+        try {
+          const { error } = await client.auth.signOut({ scope: 'local' });
+          renderUser(null);
+          loginButton.focus();
+          showNotice(error
+            ? '이 기기에서 로그아웃했습니다. 서버 연결 상태를 확인해 주세요.'
+            : '로그아웃되었습니다.');
+        } catch {
+          showNotice('로그아웃을 완료하지 못했습니다. 다시 시도해 주세요.');
+        } finally {
+          logoutButton.disabled = false;
+          logoutButton.textContent = '로그아웃';
+        }
+      });
+
+      async function initializeAuth() {
+        try {
+          if (!window.supabase?.createClient) throw new Error('Auth library unavailable');
+          client = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+            auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+          });
+          let sessionVersion = 0;
+          client.auth.onAuthStateChange((_event, session) => {
+            sessionVersion++;
+            renderUser(session?.user);
+          });
+          const initialVersion = sessionVersion;
+          const { data, error } = await client.auth.getSession();
+          if (error) throw error;
+          if (sessionVersion === initialVersion) renderUser(data.session?.user);
+          if (authDialog.open) showMessage();
+        } catch {
+          if (!client) showNotice('로그인 기능에 연결하지 못했습니다. 새로고침해 주세요.');
+          else showNotice('이전 로그인 상태를 확인하지 못했습니다. 다시 로그인해 주세요.');
+          if (authDialog.open) showMessage('로그인 연결을 확인한 뒤 다시 시도해 주세요.', 'error');
+        } finally {
+          updateForm();
+        }
+      }
+
+      if (document.readyState === 'loading') {
+        window.addEventListener('DOMContentLoaded', initializeAuth, { once: true });
+      } else {
+        initializeAuth();
+      }
+    })();
   </script>
 </body>
 </html>
